@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+{% block script %}
+{#    文件上传布局#}
+<link href="../../static/css/imageuploader.css" rel="stylesheet"  type="text/css">
+
+<script>
+$(document).ready(function(){
+  $("#upload").mouseenter(function(){
+    $("p").fadeToggle();
+  });
+});
+</script>
+    <script>
+$("#btnShow").on('click', function () {
+    $("#ulList").empty();
+    var fp = $("#fUpload");
+    var lg = fp[0].files.length; // get length
+    var items = fp[0].files;
+    var fragment = "";
+
+    if (lg > 0) {
+        for (var i = 0; i < lg; i++) {
+            var fileName = items[i].name; // get file name
+            var fileSize = items[i].size; // get file size
+            {#var fileType = items[i].type; // get file type#}
+
+            // append li to UL tag to display File info
+            fragment += "<li>" + fileName + " (<b>" + fileSize + "</b> bytes)" + "</li>";
+        }
+
+        $("#ulList").append(fragment);
+    }
+});
+</script>
+      {% if err == 1 %}
+            <script>
+                alert( '{{ message }}' )
+                window.location.href='/course/files/'
+            </script>
+{#      {% elif err == 0 %}#}
+{#        <script>#}
+{#            alert({{  err}})#}
+{#        </script>#}
+      {% endif %}
+{% endblock %}
+</head>
+<body>
+{% block navlist %}
+    <ul class="nav navbar-nav">
+    <li >
+        <a href="/course/index/">Home</a>
+    </li>
+    <li class="active">
+        <a href="/course/upload">Upload</a>
+    </li>
+    <li>
+        <a href="/course/files">Files</a>
+    </li>
+    <li>
+        <a href="/course/data/">Data</a>
+    </li>
+</ul>
+{% endblock %}
+{% block body %}
+<br>
+<br>
+<div>
+<form action="/course/upload/" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="upload" />
+    <input type="file" name="upload2" />
+    <input  id="upload" type="submit" value="上传" />
+</form>
+</div>
+<br>
+<br>
+<div class="uploader__box js-uploader__box l-center-box">
+		          <form action="/course/upload/" method="POST" enctype="multipart/form-data">
+		              <div class="uploader__contents">
+{#		                  <label id="fUpload" class="button button--secondary" multiple type="file" for="fileinput">请选择文件</label>#}
+                          <input id="fUpload" multiple type="file" class="button button--secondary" /><br />
+                            <ul id="ulList">
+                            </ul>
+{#		                  <input id="fileinput" class="uploader__file-input" type="file" multiple value="Select Files">#}
+                          <input id="btnShow" type="button" value="显示上传文件的详细详细" />
+		              </div>
+		              <input class="button button--big-bottom" type="submit" value="Upload Selected Files">
+		          </form>
+</div>
+
+{# {% if  err  %}#}
+
+{# {% endif %}#}
+{% endblock %}
+</body>
+{#上传布局启动#}
+{#<script type="text/javascript">#}
+{#		(function(){#}
+{#	            var options = {};#}
+{#	            $('.js-uploader__box').uploader({#}
+{#	            	'selectButtonCopy':'请选择或拖拽文件',#}
+{#	            	'instructionsCopy':'你可以选择或拖拽多个文件',#}
+{#	            	'submitButtonCopy':'上传选择的文件',#}
+{#	            	'furtherInstructionsCopy':'你可以选择或拖拽更多的文件',#}
+{#	            	'secondarySelectButtonCopy':'选择更多的文件'#}
+{#	            });#}
+{#	        }());#}
+{#	</script>#}
+
+</html>

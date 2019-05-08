@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 引入 echarts.js -->
+{#    <script src="echarts.js"></script>#}
+{#     <script src="../../static/js/echarts.js"></script>#}
+    <script src="https://cdn.bootcss.com/echarts/4.2.1-rc1/echarts.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/echarts/4.2.1-rc1/extension/dataTool.min.js"></script>
+
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 1500px;height:700px;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+  {#app.title = '力引导布局';#}
+
+myChart.showLoading();
+$.get('/course/data3/', function (xml) {
+    myChart.hideLoading();
+
+    {#var  graph = xml.parseJSON()#}
+    var graph = echarts.dataTool.gexf.parse(xml);
+    var categories = [];
+    for (var i = 0; i < 4; i++) {
+        categories[i] = {
+            {#name: '类目' + i#}
+            name:  i
+        };
+    }
+    graph.nodes.forEach(function (node) {
+        node.itemStyle = null;
+        node.symbolSize = 20;
+        node.value = node.symbolSize;
+        node.category = node.attributes.modularity_class;
+        {#node.category = node.attributes.url;#}
+        // Use random x, y
+        node.x = node.y = null;
+        node.draggable = true;
+    });
+    option = {
+        {#标题#}
+        title: {
+            text: 'Les Miserables',
+            subtext: 'Default layout',
+            top: 'bottom',
+            left: 'right',
+            show:true
+        },
+        tooltip: {},
+        {#图例#}
+        legend: [{
+
+            {#selectedMode: 'single',#} //单选
+            selectedMode: 'multiple', //多选
+            data: categories.map(function (a) {
+                return a.name;
+            })
+        }],
+        animation: false,
+        {#系列，图表类型#}
+        series : [
+            {
+                name: 'Les Miserables',
+                type: 'graph',
+                layout: 'force',
+                data: graph.nodes,
+                links: graph.links,
+                {#categories: categories,#}
+                categories: categories,
+                roam: true,
+                label: {
+                    normal: {
+                        show:true, //节点文字显示
+                        position: 'right' //显示位置
+                    }
+                },
+                force: {
+                    repulsion: 500
+                }
+            }
+        ]
+    };
+  // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+}, 'xml');
+    </script>
+</body>
+</html>
