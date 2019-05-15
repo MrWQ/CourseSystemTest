@@ -1,16 +1,14 @@
 import os
-
 from django.contrib import messages
 from docx import *
 from py2neo import Graph
-
+from course.dao import *
 from course.util import *
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from course.models import Course
 from course.models import *
 import json
-# Create your views here.
 from course.utilForIndexpoint import createAndSaveRelationToDB
 
 # 全局变量
@@ -18,26 +16,7 @@ graph = Graph("http://localhost:7474", username="neo4j", password='431879')
 uploadPath = 'upload\course'
 dirPath = os.path.abspath('.') + '\\' + uploadPath
 
-def data(request):
-    cql = request.GET.get('cql')
-    datadic = {}
-    if cql:
-        pass
-    else:
-        # cql = 'match (n) return n'
-        cql = 'MATCH p=()-->() RETURN p'
-        cql = 'MATCH p=()-[r:CONTRIBUTION]->() RETURN p'
-
-    datadic['data'] = getdata(cql)
-    return render(request, 'data.html', datadic)
-
-def data2(request):
-    return render(request,'data2.html')
-def data3(request):
-    return render(request,'data.gexf')
-
-
-
+# 测试返回json数据
 def testjson(request):
     resp = {'errorcode': 100, 'detail': 'Get success'}
     return HttpResponse(json.dumps(resp), content_type="application/json")
@@ -66,40 +45,8 @@ def index(request):
     context['resources'] = resources
     return render(request, 'index.html',context)
 
-#上传功能
-# def upload(request):
-#     if request.method == 'GET':
-#         err = {}
-#         err['err'] = 0
-#         err['message'] = 'not upload'
-#         return render(request,'upload.html',err)
-#     elif request.method == 'POST':
-#
-#         uploadFile = request.FILES.get('upload')    #获取上传文件
-#
-#         uploadPath = 'upload\course\\'               #文件上传路径
-#         fileName = uploadFile.name                  #文件名
-#
-#         dirPath = os.path.abspath('.') + '\\' + uploadPath
-#         while(os.path.exists(dirPath + '\\' +fileName )):
-#             # index = 1
-#             temp = fileName.split('.')
-#             fileName = temp[len(temp)-2] +'(1).' + temp[len(temp)-1]
-#             # index  = index +  1
-#         #     保存文件
-#         with open(os.path.join(uploadPath,fileName),'wb') as f:
-#             for line in uploadFile.chunks():
-#                 f.write(line)
-#
-#         filePath =  os.path.abspath('.') + '\\' + uploadPath + fileName  #文件绝对路径
-#         err = {}
-#         err['err'] = 1
-#         err['message'] = '上传成功'
-#         return render(request,'upload.html',err)
-#         # return HttpResponseRedirect('uploadfiles')
-
 # 批量上传
-def upload2(request):
+def upload(request):
     if request.method == 'GET':
         err = {}
         err['err'] = 0
@@ -127,77 +74,72 @@ def upload2(request):
 
 # 上传文件信息展示
 # 根据请求参数不同完成对上传的文件的操作
-def uploadfiles(request):
+def files(request):
     context ={}
-    context['message'] = 'test message'
-    deletekey = request.GET.get('delete')
-    changekey = request.GET.get('change')
-    updatekey = request.GET.get('update')
+    context['message'] = '文件管理页面'
     startkey  = request.GET.get('start')
     if startkey:
         start(request)
-    if deletekey :
-        delete(request,context)
-    if changekey:
-        change(request,context)
-        context['data'] = getFileInformation(dirPath)
-        print(context)
-        return render(request, 'uploadfiles.html', context)
-    if updatekey:
-        update(request,context)
-
     context['data']= getFileInformation(dirPath)
-    print(context)
-    return render(request, 'uploadfiles.html', context)
+    return render(request, 'files.html', context)
 # 已上传文件的删除功能
-def delete(request,context):
-    deletefile = request.GET['delete']
+def delete(request):
+    deletefile = request.GET['filename']
     deletefile = deletefile.replace('../','')
     deletefile = deletefile.replace('..\\','')
-
     filePath = dirPath + '\\' + deletefile
     if os.path.exists(filePath):
         try:
             os.remove(filePath )
-            context['message'] = 'delete success'
+            message = '删除成功'
         except Exception as e:
+            message = '删除成功'
             print(e)
     else:
-        context['message'] = 'not found file'
+        message = '文件未找到'
+    return HttpResponse(message)
 # 已上传文件doc转换为docx功能
-def change(request,context):
-    changefile = request.GET['change']
-
+def change(request):
+    changefile = request.GET['filename']
     filePath = dirPath + '\\' + changefile
-    if getFileType(filePath) == 'doc':
-        filePath = docSaveToDocx(filePath)
-        context['message'] = 'doc 成功转换为docx'
+    if os.path.exists(filePath):
+        if getFileType(filePath) == 'doc':
+            filePath = docSaveToDocx(filePath)
+            message = 'doc 成功转换为docx'
+        else:
+            message = '不是doc文件不能转换'
     else:
-        context['message'] = '不是doc文件不能转换'
+        message = '文件未找到'
+    return HttpResponse(message)
 
-def update(request,context):
-    updatefile = request.GET['update']
+def update(request):
+    updatefile = request.GET['filename']
 
     filePath = dirPath + '\\' + updatefile
     if os.path.exists(filePath):
         try:
             saveRelationToDB(filePath,graph)
-            context['message'] = 'update success'
+            message = '更新文件数据到数据库成功'
         except Exception as e:
             print(e)
+            message = '更新文件数据到数据库失败'
     else:
-        context['message'] = 'update fail'
+        message = '文件未找到'
+    return HttpResponse(message)
 
 # 预先创建指标点/毕业要求
 def start(request):
     file = 'E:\pycharmProject\CourseSystem\static\\毕业要求.docx'
     createAndSaveRelationToDB(file,graph)
 
+# 数据页面
+# 数据库的数据展示
+def data(request):
+    context = {}
+    context['datas'] = getNodes()
+    context['links'] = getLinks()
+    context['categories'] = getCategories()
+    return render(request, 'data.html', context)
 
 
 
-
-# if __name__ == '__main__':
-#     path = 'asffw/../sfsf/../wfwf'
-#     p = path.split('../')
-#     print(p)

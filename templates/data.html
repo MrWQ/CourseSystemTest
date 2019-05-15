@@ -5,39 +5,89 @@
     <meta charset="UTF-8">
     <title>show data</title>
 {% block script %}
-{#echarts库文件#}
-    <script src="../../static/js/echarts.js"></script>
+<script src="../../static/js/echarts.js"></script>
+<script type="text/javascript">
+   $(document).ready(function() {
+       {#初始化#}
+       var myChart = echarts.init(document.getElementById('main'));
+       {# 展示加载动画，等加载完成后在隐藏#}
+       myChart.showLoading();
+           {#初始化类别#}
+           var categories = [];
+           categories = {{ categories|safe }}
+           console.log(categories)
+           {#初始化节点#}
+           var data = [];
+           data = {{ datas|safe }}
+              data.forEach(function (node) {
+                node.itemStyle = null;
+                node.symbolSize = 30;
+                node.value = node.symbolSize;
+                // Use random x, y
+                node.x = node.y = null;
+                node.draggable = true;
+              });
+           console.log((data))
+           {#初始化边#}
+           var links = [];
+           links = {{ links|safe }}
+             links.forEach(function (link) {
+                link.lineStyle ={
+                    width:3,
+                    {#type:'dotted',#}
+                 };
 
-{#    <script src="https://cdn.bootcss.com/echarts/4.2.1-rc1/echarts.min.js"></script>#}
-{#初始化#}
-    <script type="text/javascript">
-    $(document).ready(function() {
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('main'));
-        {#var myChart = echarts.init($("#main"));#}
-        // 指定图表的配置项和数据
-        var option = {
-            title: {
-                text: 'ECharts 入门示例'
-            },
-            tooltip: {},
-            legend: {
-                data: ['销量']
-            },
-            xAxis: {
-                data: ["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"]
-            },
-            yAxis: {},
-            series: [{
-                name: '销量',
-                type: 'bar',
-                data: [5, 20, 36, 10, 10, 20]
-            }]
-        };
-
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-    });
+              });
+           console.log(links)
+           if(categories.length>0 && data.length>0 && links.length>0){
+             {#隐藏加载动画#}
+                myChart.hideLoading();
+           }
+           option = {
+               {#标题#}
+               title: {
+                   text: '课程体系知识图谱',
+                   subtext: 'Default layout',
+                   top: 'bottom',
+                   left: 'right',
+                   show: true
+               },
+               tooltip: {},
+               {#图例#}
+               legend: [{
+                   {#selectedMode: 'single',#} //单选
+                   selectedMode: 'multiple', //多选
+               }],
+               animation: false,
+               {#系列，图表类型#}
+               series: [
+                   {
+                       name: '节点',
+                       type: 'graph',
+                       layout: 'force',
+                       focusNodeAdjacency: true,    //相邻节点高亮
+                       {#节点填充#}
+                       data: data,
+                       {#边填充#}
+                       links: links,
+                       {#类别填充#}
+                       categories: categories,
+                       roam: true,
+                       label: {
+                           normal: {
+                               show: true, //节点文字显示
+                               position: 'right' //显示位置
+                           }
+                       },
+                       force: {
+                           repulsion: 500
+                       }
+                   }
+               ]
+           };
+           // 使用刚指定的配置项和数据显示图表。
+           myChart.setOption(option);
+   })
     </script>
 {% endblock %}
 </head>
@@ -56,38 +106,21 @@
     <li class="active">
         <a href="/course/data/">Data</a>
     </li>
-    <li>
-        <form action="/course/data" method="get">
-            <input type="text" name="cql">
-            <input type="submit" value="查询">
-        </form>
-    </li>
+{#    <li>#}
+{#        <form action="/course/data" method="get">#}
+{#            <input type="text" name="cql">#}
+{#            <input type="submit" value="查询">#}
+{#        </form>#}
+{#    </li>#}
 </ul>
 {% endblock %}
 {% block body %}
 <br>
 <br>
-    <form action="/course/data" method="get">
-        <input type="text" name="cql">
-        <input type="submit" value="查询">
-    </form>
+<center>
      <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
-    <div id="main" style="width: 600px;height:400px;"></div>
-
-
-
-
-{% for i in data %}
-    <ul>
-        <li> {{ i }} </li>
-        <li>{{ i.n }}</li>
-    </ul>
-    {% empty %}
-    <h1 style="color: orange">no data or error</h1>
-{% endfor %}
-
-
-
+    <div id="main" style="width: 1500px;height:620px;"></div>
+</center>
 {% endblock %}
 </body>
 </html>

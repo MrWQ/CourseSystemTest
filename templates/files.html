@@ -35,25 +35,20 @@
         {#删除文件#}
         $("tr").children().children("button#delete").click(function(){
         var filename = $(this).parent().parent().children("td#name").text();
-        $.get("/course/files/?delete="+filename, function (data,status){alert("\n状态: " + status +'{{ message }}'+"数据: " + data  )});
-
+        $.get("/course/delete/?filename="+filename, function (message){alert(message)});
         window.location.reload('/course/files/')
    });
 {#        转换doc为docx #}
          $("tr").children().children("button#change").click(function(){
         var filename = $(this).parent().parent().children("td#name").text();
-        $.get("/course/files/?change="+filename,alert('{{ message }}'));
-
-        {#window.location.reload('/course/tip/?str=转换成功')#}
+        $.get("/course/change/?filename="+filename,function (message){alert(message)});
         window.location.reload('/course/files')
-
   });
 {#        更新到数据库 #}
      $("tr").children().children("button#update").click(function(){
     var filename = $(this).parent().parent().children("td#name").text();
-    $.get("/course/files/?update="+filename,alert('{{ message }}'));
+    $.get("/course/update/?filename="+filename,function (message){alert(message)});
     window.location.reload('/course/files')
-
   });
 });
 </script>
